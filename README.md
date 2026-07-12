@@ -22,12 +22,6 @@ susceptibility, fitted with a block SMC² algorithm.
 ```
 
 
-Only the overall contact matrix (`Ireland_country_level_M_overall_contact_matrix_85.csv`)
-and the age distribution are currently used by the scripts. The four
-setting-specific matrices (community/household/school/work) are stored
-in `data/contact_matrices/` for future use but aren't wired into any
-driver yet.
-
 ## `src/` module map
 
 | File                      | Contents |
