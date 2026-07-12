@@ -32,7 +32,7 @@ driver yet.
 
 | File                      | Contents |
 |---------------------------|----------|
-| `utils.R`                 | `%||%`, `logSumExp`, progress bar, `par_lapply` |
+| `utils.R`                 |  `logSumExp`, progress bar, `par_lapply` |
 | `resampling.R`             | `Resample()`: systematic / multinomial / stratified |
 | `particle_filter.R`       | Bootstrap particle filter: `OneStepPrediction`, `OneStepUpdate`, `BootstrapPF` |
 | `delay_distributions.R`   | Discretized reporting-delay / generation-time PMFs |
