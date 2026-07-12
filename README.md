@@ -43,7 +43,7 @@ driver yet.
 | `epi_ssm_1age.R`          | Single-population EpiSSM (`InitState`, `StateProcess`, `ObsProcess`) |
 | `epi_ssm_multiage.R`      | Age-stratified EpiSSM, contact-matrix-coupled renewal model |
 | `contact_matrix_utils.R`  | Reciprocity correction + age-group aggregation of contact matrices |
-| `epi_diagnostics.R`       | Next-generation-matrix R_t / R_{a,t}, sort-then-sum population totals |
+| `epi_diagnostics.R`       | Next-generation-matrix R_t / R_{a,t}, aggregate population |
 | `diagnostics.R`           | All ggplot2 plotting helpers (filtering ribbons, SMC² diagnostics, prior/posterior overlays, grid layout) |
 | `sim_data_1age.R`         | Generation-time / report-delay kernels for the 1-age driver |
 | `sim_data_multi.R`        | Forward-simulates synthetic age-stratified data for the simulation study |
