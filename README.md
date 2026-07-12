@@ -21,6 +21,14 @@ susceptibility, fitted with a block SMC² algorithm.
 └── README.md
 ```
 
+## Installation
+Clone the repository:
+
+```bash
+git clone https://github.com/Dhorasso/eSMC2_Epi_Inference.git
+cd eSMC2_Epi_Inference
+```
+
 Only the overall contact matrix (`Ireland_country_level_M_overall_contact_matrix_85.csv`)
 and the age distribution are currently used by the scripts. The four
 setting-specific matrices (community/household/school/work) are stored
