@@ -73,98 +73,6 @@ calls the kernels in `mcmc_kernels.R`. This mutual reference is fine in R
 — function calls are resolved when they run, not when the file is
 sourced — but both files must be sourced before `SMC2()` is called.
 
-## Renaming / reorganisation notes (vs. the original scripts)
-
-- `BPFsmc2.R` → **`particle_filter.R`** (name reflects its content: the
-  bootstrap particle filter, used both standalone and inside SMC²).
-- `SMC2.R` was a single ~650-line file mixing five concerns. It has been
-  split into `smc2.R` (control flow only), `priors.R` (prior
-  sampling/density), and `mcmc_kernels.R` (move-step kernels + adaptive
-  `Nx`), with shared helpers (`%||%`, `logSumExp`, progress bar,
-  `par_lapply`) factored out into `utils.R` instead of being redefined
-  in three different files.
-- `delay_pmf.R` → **`delay_distributions.R`**; it contained three
-  near-duplicate analytic discretizers (`discretize_gamma`,
-  `discr_gamma`, `discretize_dist`). These are consolidated into one
-  `discretize_dist(dist = "gamma" | "lognormal")`.
-- `PosteriorMarginal.R` → **`posterior_marginal.R`** (lowercase, for
-  consistent file naming across the package).
-- `Resampling.R` → **`resampling.R`** (same reason); the systematic and
-  stratified search loop is factored into one shared helper
-  (`.cdf_lookup`) instead of being duplicated inline.
-- `EpiSSM_1age.R` → **`epi_ssm_1age.R`**; `EpiSSM_multi_data.R` →
-  **`epi_ssm_multiage.R`**.
-- `Diag_smc2.R` → **`diagnostics.R`**. `plot_filter_one_age()`,
-  `.assemble_age_fig()`, and `.grid_shared_ylabel()` were each
-  re-defined (with small, inconsistent variations) inline in
-  `test_1age_smc2.R`, `Test_muti_data.R`, and `Ireland_analysis.R`.
-  They now live only in `diagnostics.R`. All PMMH-boxplot helpers
-  (`.add_pmmh_boxplot()`) have been removed.
-- The next-generation-matrix / R_t / R_{a,t} / sort-then-sum logic,
-  duplicated across `Test_muti_data.R` and `Ireland_analysis.R`, is
-  consolidated into **`epi_diagnostics.R`**.
-- `test_1age_smc2.R` → **`scripts/run_1age_covid.R`**;
-  `Test_muti_data.R` → **`scripts/run_multi_simulation.R`**;
-  `Ireland_analysis.R` → **`scripts/run_ireland_analysis.R`**.
-
-## Bugs found and fixed
-
-1. **`epi_ssm_1age.R`, `ObsProcess()`**: when `week_effect = FALSE`, the
-   original code set `phi <- theta[2]` but then called
-   `rnbinom(..., size = kappa, ...)` — `kappa` was never defined in
-   that branch and would error at runtime. Fixed by using `kappa` in
-   both branches (confirmed with project owner).
-2. **`Diag_smc2.R`, `plot_filter_one_age()`**: the `true_points` branch
-   referenced a global `cut_date` that wasn't a parameter of the
-   function — it only worked because a global variable of that name
-   happened to be defined later in `Ireland_analysis.R`. Replaced with
-   a `.anchor_points()` helper that anchors `true_points` at
-   `forecast_start_date + 1` when supplied (confirmed with project
-   owner), falling back to tail-alignment of the panel's own time axis
-   otherwise.
-3. **Population-CSV collapsing bug** in the (now-consolidated)
-   contact-matrix aggregation code: the original driver scripts always
-   collapsed the population vector's upper tail assuming a
-   single-year-of-age table running past age 85 (as the original,
-   uploaded `PEA11...csv` did). Given `R 86:85` counts *backwards*
-   (`c(86, 85)`), running this against
-   `Ireland_country_level_age_distribution_85.csv` — which already has
-   exactly 85 age bands — would silently corrupt the final population
-   entry. `read_age_distribution()` in `contact_matrix_utils.R` now
-   only collapses when the file actually has more rows than the
-   target resolution.
-4. **Inconsistent next-generation-matrix convention**: `Test_muti_data.R`
-   computed `K[i,j] = beta_j * C[i,j]` while `Ireland_analysis.R` computed
-   `K[i,j] = beta_i * C[i,j]` for the *same* model. Only the latter
-   matches the renewal equation actually implemented in
-   `epi_ssm_multiage.R::StateProcess()` (age `a`'s new infections are
-   driven by its own `beta_a(t)`, applied to contacts received from
-   every source age `b`, weighted by `ContMatrix[b, a]`). `epi_diagnostics.R`
-   documents this derivation explicitly and uses the correct convention
-   throughout — worth double-checking against your own derivation.
-5. **`epi_ssm_multiage.R`**: contact-matrix reparameterisation helpers
-   (`.contact_row()`, Cholesky/scale/estimate modes, gated by
-   `opts$chol_contact` / `scale_contact` / `estimate_contact`) exist but
-   are never actually called by `StateProcess()`, which always reads
-   `opts$ContMatrix` directly. This looks like unfinished work rather
-   than a typo, so it has been **left as-is** rather than guessed at —
-   if you intended one of those modes to be active, let me know and
-   I'll wire it in.
-
-## Missing dependencies (not part of either upload)
-
-- `src/sim_data1age.R` and `src/sim_multi_data.R` were referenced by
-  the original drivers but never uploaded. `sim_data_1age.R` was a
-  safe substitute (the 1-age driver only ever used it for two delay
-  kernels). `sim_data_multi.R`, however, had to *forward-simulate* an
-  internally consistent synthetic dataset from the model itself,
-  since the multi-age driver validates against ground-truth
-  `beta_true`/`I_true` trajectories that weren't provided — see that
-  file's header for the (illustrative, replaceable) parameter choices.
-- `src/Marginal_NPF.R` (`get_marginal_states()`/`simulate_observations()`)
-  was referenced only by the 1-age driver; the other two drivers
-  already used the equivalent `PosteriorMarginal()`, so
-  `run_1age_covid.R` has been switched to use that instead.
 
 ## Simulated-data caching
 
@@ -197,10 +105,3 @@ opts$resample_scope  <- "global"   # or "block" (default)
 opts$resample_method <- "systematic"  # "multinomial" | "stratified"
 ```
 
-## Package-readiness
-
-Functions use explicit, documented arguments and roxygen-style comment
-blocks (`#'`) so that converting `src/` into an installable package
-(`devtools::create()` + move files to `R/`, add a `DESCRIPTION` and
-`NAMESPACE`) is a small step rather than a rewrite. External
-dependencies used so far: `compiler`, `parallel`, `MASS`, `FNN`.
