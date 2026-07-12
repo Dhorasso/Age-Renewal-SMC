@@ -25,7 +25,7 @@ susceptibility, fitted with a block SMC² algorithm.
 Clone the repository:
 
 ```bash
-
+https://github.com/Dhorasso/Age-Renewal-SMC.git
 ```
 
 Only the overall contact matrix (`Ireland_country_level_M_overall_contact_matrix_85.csv`)
