@@ -21,12 +21,6 @@ susceptibility, fitted with a block SMC² algorithm.
 └── README.md
 ```
 
-## Installation
-Clone the repository:
-
-```bash
-https://github.com/Dhorasso/Age-Renewal-SMC.git
-```
 
 Only the overall contact matrix (`Ireland_country_level_M_overall_contact_matrix_85.csv`)
 and the age distribution are currently used by the scripts. The four
