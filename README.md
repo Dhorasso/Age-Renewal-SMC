@@ -59,7 +59,7 @@ driver yet.
 | `run_ireland_analysis.R` | age-stratified EpiSSM | real age-stratified cases, with 14-day forecast + CRPS |
 |`run_pmmh_ireland.R`      | age-stratified EpiSSM| inference via PMMH 
 
-run_pmmh_ireland.R shows that PMMH() is an alternative to SMC2(): it reuses the exact same SSM and (almost) the exact
+`run_pmmh_ireland.R` shows that PMMH() is an alternative to SMC2(): it reuses the exact same SSM and (almost) the exact
 same opts as run_ireland_analysis.R, only adding the MCMC-specific fields (iterations, nChains, burnin, thin). The
 same pattern works for any other model/data combination already set up for SMC2() in this repo — e.g. EpiSSM_1age on the real
 1-age series, or EpiSSM on the simulated multi-age dataset: build opts the way the corresponding SMC2 script already does, add
