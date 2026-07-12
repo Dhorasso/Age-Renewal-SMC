@@ -25,8 +25,7 @@ susceptibility, fitted with a block SMC² algorithm.
 Clone the repository:
 
 ```bash
-git clone https://github.com/Dhorasso/eSMC2_Epi_Inference.git
-cd eSMC2_Epi_Inference
+
 ```
 
 Only the overall contact matrix (`Ireland_country_level_M_overall_contact_matrix_85.csv`)
