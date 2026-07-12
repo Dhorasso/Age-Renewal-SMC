@@ -48,6 +48,7 @@ driver yet.
 | `sim_data_1age.R`         | Generation-time / report-delay kernels for the 1-age driver |
 | `sim_data_multi.R`        | Forward-simulates synthetic age-stratified data for the simulation study |
 | `simulated_data_cache.R`  | `load_or_simulate()`: cache any simulator's output to CSV under `data/simulated/` |
+|`pmmh.R`                    | PMMH(): Particle Marginal Metropolis-Hastings via BayesianTools package, using the same `BootstrapPF` likelihood|
 
 ## `scripts/` (entry points)
 
@@ -56,8 +57,17 @@ driver yet.
 | `run_1age_covid.R` | 1-age EpiSSM | real total daily cases (`data/real/Covid_Data_Ireland.csv`) |
 | `run_multi_simulation.R` | age-stratified EpiSSM | synthetic data, cached to `data/simulated/` |
 | `run_ireland_analysis.R` | age-stratified EpiSSM | real age-stratified cases, with 14-day forecast + CRPS |
+|`run_pmmh_ireland.R`      | age-stratified EpiSSM, via PMMH |
 
-All three run SMC², plot filtering-distribution estimates only (no PMMH — dropped per project decision), and save figures to `figures/real_data/` or `figures/sim_data/`.
+run_pmmh_ireland.R shows that PMMH() is an alternative to SMC2(): it reuses the exact same SSM and (almost) the exact
+same opts as run_ireland_analysis.R, only adding the MCMC-specific fields (iterations, nChains, burnin, thin). The
+same pattern works for any other model/data combination already set up for SMC2() in this repo — e.g. EpiSSM_1age on the real
+1-age series, or EpiSSM on the simulated multi-age dataset: build opts the way the corresponding SMC2 script already does, add
+the MCMC fields, and call PMMH(SSM, opts) instead of SMC2(SSM, opts). 
+PMMH() requires the BayesianTools package (install.packages("BayesianTools")); it isn’t needed for any of the SMC2
+based scripts.
+
+All three run SMC², plot filtering-distribution and save figures to `figures/real_data/` or `figures/sim_data/`.
 
 **Load order.** `smc2.R` sources `utils.R`, `resampling.R`,
 `particle_filter.R`, `priors.R`, and `mcmc_kernels.R` itself, so in most
