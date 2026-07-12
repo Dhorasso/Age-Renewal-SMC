@@ -67,7 +67,7 @@ the MCMC fields, and call PMMH(SSM, opts) instead of SMC2(SSM, opts).
 PMMH() requires the BayesianTools package (install.packages("BayesianTools")); it isn’t needed for any of the SMC2
 based scripts.
 
-All three run SMC², plot filtering-distribution and save figures to `figures/real_data/` or `figures/sim_data/`.
+Plot of the filtering-distribution are save in  `figures/real_data/` or `figures/sim_data/`.
 
 **Load order.** `smc2.R` sources `utils.R`, `resampling.R`,
 `particle_filter.R`, `priors.R`, and `mcmc_kernels.R` itself, so in most
