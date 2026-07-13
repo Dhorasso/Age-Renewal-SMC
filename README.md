@@ -39,7 +39,6 @@ susceptibility, fitted with a block SMC² algorithm.
 | `contact_matrix_utils.R`  | Reciprocity correction + age-group aggregation of contact matrices |
 | `epi_diagnostics.R`       | Next-generation-matrix R_t / R_{a,t}, aggregate population |
 | `diagnostics.R`           | All ggplot2 plotting helpers (filtering ribbons, SMC² diagnostics, prior/posterior overlays, grid layout) |
-| `sim_data_1age.R`         | Generation-time / report-delay kernels for the 1-age driver |
 | `sim_data_multi.R`        | Forward-simulates synthetic age-stratified data for the simulation study |
 | `simulated_data_cache.R`  | `load_or_simulate()`: cache any simulator's output to CSV under `data/simulated/` |
 |`pmmh.R`                    | PMMH(): Particle Marginal Metropolis-Hastings via BayesianTools package, using the same `BootstrapPF` likelihood|
