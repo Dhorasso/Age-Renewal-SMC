@@ -12,7 +12,7 @@ susceptibility, fitted with a block SMC² algorithm.
 ├── data/
 │   ├── simulated/          # cached synthetic datasets (see load_or_simulate() below)
 │   ├── real/                # Irish COVID-19 surveillance data (Covid_Data_Ireland.csv)
-│   └── contact_matrices/    # age-structured contact matrices + age distribution (85-band CSVs)
+│   └── contact_matrices/    # contact matrices + age distribution (85-band CSVs)
 ├── src/                      # all model / inference code 
 ├── figures/
 │   ├── real_data/            # figures generated from the real-data analysis
