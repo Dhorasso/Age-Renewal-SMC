@@ -34,7 +34,7 @@ susceptibility, fitted with a block SMC² algorithm.
 | `mcmc_kernels.R`          | `HWG_kernel`, `DA_HWG_kernel`, kNN surrogate, adaptive `Nx` |
 | `smc2.R`                  | `IncrementalPF`, `PF_SMC2`, main `SMC2()` loop |
 | `posterior_marginal.R`   | `PosteriorMarginal()`: posterior sample of latent trajectories |
-| `epi_ssm_1age.R`          | Single-population EpiSSM (`InitState`, `StateProcess`, `ObsProcess`) |
+| `epi_ssm_1age.R`          | aggregated population EpiSSM (`InitState`, `StateProcess`, `ObsProcess`) |
 | `epi_ssm_multiage.R`      | Age-stratified EpiSSM, contact-matrix-coupled renewal model |
 | `contact_matrix_utils.R`  | Reciprocity correction + age-group aggregation of contact matrices |
 | `epi_diagnostics.R`       | Next-generation-matrix R_t / R_{a,t}, aggregate population |
