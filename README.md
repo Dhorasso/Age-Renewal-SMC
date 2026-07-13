@@ -42,19 +42,11 @@ based scripts.
 
 Plot of the filtering-distribution are save in  `figures/real_data/` or `figures/sim_data/`.
 
-**Load order.** `smc2.R` sources `utils.R`, `resampling.R`,
-`particle_filter.R`, `priors.R`, and `mcmc_kernels.R` itself, so in most
-scripts you only need:
+**Load order.** in most scripts you only need:
 
 ```r
 source("src/smc2.R")
 source("src/posterior_marginal.R")
 source("src/delay_distributions.R")
 ```
-
-`mcmc_kernels.R` calls `PF_SMC2()` (defined in `smc2.R`), and `smc2.R`
-calls the kernels in `mcmc_kernels.R`. This mutual reference is fine in R
-— function calls are resolved when they run, not when the file is
-sourced — but both files must be sourced before `SMC2()` is called.
-
 
