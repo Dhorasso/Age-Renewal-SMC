@@ -29,7 +29,7 @@ susceptibility, fitted with a block SMC² algorithm.
 |---|---|---|
 | `run_1age_covid.R` | 1-age EpiSSM | real total daily cases (`data/real/Covid_Data_Ireland.csv`) |
 | `run_multi_simulation.R` | age-stratified EpiSSM | synthetic data, cached to `data/simulated/` |
-| `run_ireland_analysis.R` | age-stratified EpiSSM | real age-stratified cases, with 14-day forecast + CRPS |
+| `run_ireland_analysis.R` | age-stratified EpiSSM | real age-stratified cases, with 14-day forecast |
 |`run_pmmh_ireland.R`      | age-stratified EpiSSM| inference via PMMH 
 
 `run_pmmh_ireland.R` shows that PMMH() is an alternative to SMC2(): it reuses the exact same SSM and (almost) the exact
