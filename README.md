@@ -14,10 +14,10 @@ susceptibility, fitted with a block SMC² algorithm.
 │   ├── real/                # Irish COVID-19 surveillance data 
 │   └── contact_matrices/    # contact matrices + age distribution 
 ├── src/                      # all model / inference code 
+├── scripts/                   # entry-point scripts that call src/ on data/
 ├── figures/
 │   ├── real_data/            # figures generated from the real-data analysis
 │   └── sim_data/             # figures generated from the simulation study
-├── scripts/                   # entry-point scripts that call src/ on data/
 └── README.md
 ```
 
