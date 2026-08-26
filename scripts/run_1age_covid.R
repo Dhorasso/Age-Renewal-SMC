@@ -20,6 +20,7 @@ source("src/epi_ssm_1age.R")
 source("src/sim_data_1age.R")       # generation-time / report-delay kernels
 source("src/diagnostics.R")
 source("src/posterior_marginal.R")
+source("src/marginal_state_1age.R")
 
 dir.create("figures/real_data", showWarnings = FALSE, recursive = TRUE)
 
@@ -162,7 +163,7 @@ print(fig_week_effect)
 # ------------------------------------------------------------
 # 6. Posterior marginal states + simulated observations
 # ------------------------------------------------------------
-source("src/marginal_state_1age.R")
+#source("src/marginal_state_1age.R")
 opts$forecastingHorizon <- 14
 marg       <- get_marginal_states_1age(result, opts, N_s = 100)
 X_marginal <- marg$X_marginal
