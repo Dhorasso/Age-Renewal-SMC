@@ -25,6 +25,7 @@ source("src/pmmh.R")
 source("src/epi_ssm_multiage.R")
 source("src/delay_distributions.R")
 source("src/contact_matrix_utils.R")
+source("src/posterior_marginal.R")
 
 dir.create("figures/real_data", showWarnings = FALSE, recursive = TRUE)
 
