@@ -48,8 +48,8 @@ Plot of the filtering-distribution are save in  `figures/real_data/` or `figures
 **Load order.** in most scripts you only need:
 
 ```r
-source("src/smc2.R") # or source("src/pmmh.R")
-# or source("src/posterior_marginal.R")
+source("src/smc2.R")                # or source("src/pmmh.R")
+source("src/marginal_state.R")      # or source("src/posterior_marginal.R")
 source("src/delay_distributions.R")
 ```
 
