@@ -187,7 +187,7 @@ theta_sub <- result$theta[sample(seq_len(opts$N_theta), Ns), opts$T, ]
 
 
 
-source("src/marginal_state.R")
+#source("src/marginal_state.R")
 opts$forecastingHorizon <- 14
 marg       <- get_marginal_states(result, opts, N_s = 100)
 X_marginal <- marg$X_marginal
