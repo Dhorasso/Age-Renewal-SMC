@@ -17,8 +17,9 @@ source("src/delay_distributions.R")
 source("src/contact_matrix_utils.R")
 source("src/diagnostics.R")
 source("src/epi_diagnostics.R")
-source("src/posterior_marginal.R")
 source("src/marginal_state.R")
+source("src/posterior_marginal.R")
+
 
 dir.create("figures/real_data", showWarnings = FALSE, recursive = TRUE)
 
