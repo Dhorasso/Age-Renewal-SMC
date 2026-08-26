@@ -133,7 +133,7 @@ print(fig_param)
 # 6. Posterior marginal state 
 # ------------------------------------------------------------
 
-source("src/marginal_state.R")
+#source("src/marginal_state.R")
 opts$forecastingHorizon <- 0
 marg       <- get_marginal_states(result, opts, N_s = 100)
 X_marginal <- marg$X_marginal
