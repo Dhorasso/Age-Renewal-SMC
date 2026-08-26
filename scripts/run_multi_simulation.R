@@ -24,8 +24,9 @@ source("src/sim_data_multi.R")
 source("src/simulated_data_cache.R")
 source("src/diagnostics.R")
 source("src/epi_diagnostics.R")
-source("src/posterior_marginal.R")
 source("src/marginal_state.R")
+source("src/posterior_marginal.R")
+
 
 dir.create("figures/sim_data", showWarnings = FALSE, recursive = TRUE)
 
