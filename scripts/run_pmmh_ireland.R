@@ -155,3 +155,194 @@ thetaSamples <- getSample(
   numSamples     = 100,
   coda           = FALSE
 )
+
+
+
+#============================================
+# Marginal state estimate
+#============================================
+
+opts$forecastingHorizon <- 14
+marg       <- PosteriorMarginal(thetaSamples, EpiSSM, opts)
+X_marginal <- marg$X        # (Ns x Nx) x (T + h) x state_dim
+C_sim      <- marg$X_obs    # (Ns x Nx) x (T + h) x A
+
+age_labels <- c("0-24", "25-44", "45-64", "65+")
+age_colors <- c("0-24" = "#2166ac", "25-44" = "#4dac26",
+                "45-64" = "#8B6914", "65+" = "#762a83")
+n_col <- 2
+w_age <- 12 * n_col
+h_age <- 8 * ceiling(A / n_col)
+
+# ------------------------------------------------------------
+# 9. Age-specific transmissibility (beta)
+# ------------------------------------------------------------
+beta_plots <- lapply(seq_len(A), function(a) {
+  plot_filter_one_age(
+    theta_mat            = X_marginal[, , 2 * a - 1],
+    init_date            = as.character(start_date),
+    plot_title           = paste("Age group:", age_labels[a]),
+    age_color            = age_colors[age_labels[a]],
+    forecast_start_date  = forecast_start,
+    ymin = 0.02, ymax = 0.25
+  )
+})
+fig_beta <- .assemble_age_fig(
+  beta_plots, n_col,
+  y_label = bquote(bold("Age-specific susceptibility parameter") ~ ~ bolditalic(beta)[a * "," ~ t]),
+  x_label = "Date"
+)
+ggsave("figures/real_data/fig_age_beta.pdf", fig_beta, width = w_age, height = h_age)
+print(fig_beta)
+
+# ------------------------------------------------------------
+# 10. New infections (I) by age group
+# ------------------------------------------------------------
+I_plots <- lapply(seq_len(A), function(a) {
+  plot_filter_one_age(
+    theta_mat           = X_marginal[, , 2 * (a - 1) + 2],
+    init_date           = as.character(start_date),
+    plot_title          = paste("Age group:", age_labels[a]),
+    age_color           = age_colors[age_labels[a]],
+    forecast_start_date = forecast_start
+  )
+})
+fig_I <- .assemble_age_fig(I_plots, n_col, "New infections")
+ggsave("figures/real_data/fig_age_I.pdf", fig_I, width = w_age, height = h_age)
+print(fig_I)
+
+# ------------------------------------------------------------
+# 11. Reported cases (C) by age group: train fit + held-out forecast
+# ------------------------------------------------------------
+C_plots <- lapply(seq_len(A), function(a) {
+  train_series <- covid_data %>% filter(Date >= start_date & Date <= cut_date) %>% pull(a + 1)
+  test_series  <- covid_data %>% filter(Date > cut_date & Date <= cut_date + horizon) %>% pull(a + 1)
+  
+  plot_filter_one_age(
+    theta_mat           = C_sim[, , a],
+    init_date           = as.character(start_date),
+    plot_title          = paste("Age group:", age_labels[a]),
+    age_color           = age_colors[age_labels[a]],
+    forecast_start_date = forecast_start,
+    observed_points     = train_series,
+    true_points         = test_series
+  )
+})
+fig_C <- .assemble_age_fig(C_plots, n_col, "Reported cases")
+ggsave("figures/real_data/fig_age_C.pdf", fig_C, width = w_age, height = h_age)
+print(fig_C)
+
+# ------------------------------------------------------------
+# 12. CRPS at each forecast horizon, by age group
+# ------------------------------------------------------------
+N_total          <- dim(X_marginal)[1]
+T_obs            <- dim(X_marginal)[2]
+n_particles_crps <- 2000L
+set.seed(42)
+particle_idx <- sample(seq_len(N_total), min(n_particles_crps, N_total))
+
+forecast_dates   <- covid_data %>% filter(Date > cut_date & Date <= cut_date + horizon) %>% pull(Date)
+H                <- length(forecast_dates)
+t_forecast_start <- opts$T + 1L  # first forecast column in X_marginal / C_sim
+
+crps_mat <- coverage_mat <- matrix(NA_real_, nrow = H, ncol = A)
+
+for (a in seq_len(A)) {
+  obs_series <- covid_data %>% filter(Date > cut_date & Date <= cut_date + horizon) %>% pull(a + 1)
+  for (h in seq_len(H)) {
+    t_idx <- t_forecast_start + h - 1L
+    if (t_idx > T_obs) next
+    sim_log <- log1p(C_sim[particle_idx, t_idx, a])
+    obs_log <- log1p(obs_series[h])
+    crps_mat[h, a] <- scoringRules::crps_sample(y = obs_log, dat = sim_log)
+    q <- quantile(sim_log, c(0.025, 0.975))
+    coverage_mat[h, a] <- obs_log >= q[1] && obs_log <= q[2]
+  }
+}
+
+crps_df <- as.data.frame(crps_mat) %>%
+  setNames(age_labels) %>%
+  mutate(date = forecast_dates, days = as.numeric(forecast_dates - cut_date)) %>%
+  tidyr::pivot_longer(cols = all_of(age_labels), names_to = "age_group", values_to = "crps") %>%
+  mutate(age_group = factor(age_group, levels = age_labels))
+
+coverage95 <- colMeans(coverage_mat, na.rm = TRUE) * 100
+
+age_labels_crps <- crps_df %>%
+  group_by(age_group) %>%
+  summarise(mean_crps = mean(crps, na.rm = TRUE), .groups = "drop") %>%
+  mutate(label = sprintf("%s (CRPS = %.2f,  Cov95 = %.1f%%)",
+                         age_group, mean_crps,
+                         coverage95[match(age_group, age_labels)])) %>%
+  { setNames(.$label, .$age_group) }
+
+fig_crps <- ggplot(crps_df, aes(x = days, y = crps, colour = age_group, group = age_group)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 1.8) +
+  scale_colour_manual(values = age_colors, name = "Age group", labels = age_labels_crps) +
+  scale_x_continuous(breaks = unique(crps_df$days)) +
+  labs(x = "Forecast horizon (days)", y = "CRPS (log scale)") +
+  theme_bw(base_size = 11) +
+  theme(
+    legend.position = c(0.98, 0.98),
+    legend.justification = c(1, 1),
+    legend.background = element_rect(colour = "black", fill = "white"),
+    legend.margin = margin(4, 6, 4, 6),
+    panel.grid.minor = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.text = element_text(face = "bold")
+  )
+
+ggsave("figures/real_data/fig_crps.pdf", fig_crps, width = 8, height = 4)
+print(fig_crps)
+# ------------------------------------------------------------
+# 13. Effective reproduction number (Rt / R_{a,t}) via NGM
+# ------------------------------------------------------------
+rt_res <- compute_Rt_Rat(X_marginal[, , 2 * seq_len(A) - 1], M_4x4)
+
+rat_plots <- lapply(seq_len(A), function(a) {
+  plot_filter_one_age(
+    theta_mat           = rt_res$Rat[, , a],
+    init_date           = as.character(start_date),
+    plot_title          = paste("Age group:", age_labels[a]),
+    age_color           = age_colors[age_labels[a]],
+    forecast_start_date = forecast_start,
+    ymin = 0.5, ymax = 1.5
+  ) + geom_hline(yintercept = 1, linetype = "dashed", linewidth = 0.7)
+})
+fig_rat <- .assemble_age_fig(
+  rat_plots, n_col,
+  bquote(bold("Age-specific reproduction contribution") ~ ~ bolditalic(R)[a * "," ~ t])
+)
+ggsave("figures/real_data/fig_age_Rat.pdf", fig_rat, width = w_age, height = h_age)
+print(fig_rat)
+
+# ------------------------------------------------------------
+# 14. Population-level totals: Rt, total infections, total cases
+# ------------------------------------------------------------
+I_total_mat <- sort_then_sum(lapply(seq_len(A), function(a) X_marginal[, 1:T_obs, 2 * (a - 1) + 2]))
+C_total_mat <- sort_then_sum(lapply(seq_len(A), function(a) C_sim[, 1:T_obs, a]))
+
+theme_strip_x <- theme(axis.title.x = element_blank(), axis.text.x = element_blank(),
+                       axis.ticks.x = element_blank())
+theme_panel <- theme(axis.text = element_text(size = 18), axis.title = element_text(size = 18),
+                     plot.margin = margin(12, 5, 12, 5))
+
+fig_Rt <- plot_filter_one(theta_mat = rt_res$Rt, init_date = as.character(start_date),
+                          y_label = "Eff. reproduction number", forecast_start_date = forecast_start) +
+  geom_hline(yintercept = 1, linetype = "dashed", linewidth = 1.0) + theme_panel + theme_strip_x
+
+fig_I_total <- plot_filter_one(theta_mat = I_total_mat, init_date = as.character(start_date),
+                               y_label = "New infections", forecast_start_date = forecast_start) +
+  theme_panel + theme_strip_x
+
+fig_C_total <- plot_filter_one(theta_mat = C_total_mat, init_date = as.character(start_date),
+                               y_label = "Reported cases", forecast_start_date = forecast_start,
+                               observed_points = train_data$Total_Daily_Cases,
+                               true_points     = test_data$Total_Daily_Cases) +
+  coord_cartesian(ylim = c(0, 14000)) + theme_panel
+
+fig_combined <- fig_Rt / fig_I_total / fig_C_total + plot_layout(heights = c(1, 1, 1))
+ggsave("figures/real_data/fig_combined.pdf", fig_combined, width = 12, height = 13, limitsize = FALSE)
+print(fig_combined)
+
