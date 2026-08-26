@@ -94,6 +94,7 @@ opts <- list(
   pBeta0 = replicate(A, function(N) rbeta(N, shape1 = 1, shape2 = 10), simplify = FALSE),
   pI0    = replicate(A, function(N) sample(400:1200, N, replace = TRUE), simplify = FALSE),
 
+  # we can include prior ox fixed value for rho_a as in run_ireland_analysis.R                   
   paramNames = c("sigma[1]", "sigma[2]", "sigma[3]", "sigma[4]", "kappa"),
   paramPriors = list(
     list(dist = "lnorm", meanlog = log(0.02), sdlog = 0.5),
