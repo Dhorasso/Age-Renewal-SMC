@@ -215,6 +215,7 @@ h_age <- 8 * ceiling(A / n_col)
 # ------------------------------------------------------------
 # 9. Age-specific transmissibility (beta)
 # ------------------------------------------------------------
+                     
 beta_plots <- lapply(seq_len(A), function(a) {
   plot_filter_one_age(
     theta_mat            = X_marginal[, , 2 * a - 1],
@@ -245,7 +246,7 @@ I_plots <- lapply(seq_len(A), function(a) {
     forecast_start_date = forecast_start
   )
 })
-fig_I <- .assemble_age_fig(I_plots, n_col, "New infections")
+fig_I <- .assemble_age_fig(I_plots, n_col, y_label = "New infections", x_label = "Date")
 ggsave("figures/real_data/fig_age_I.pdf", fig_I, width = w_age, height = h_age)
 print(fig_I)
 
@@ -266,7 +267,7 @@ C_plots <- lapply(seq_len(A), function(a) {
     true_points         = test_series
   )
 })
-fig_C <- .assemble_age_fig(C_plots, n_col, "Reported cases")
+fig_C <- .assemble_age_fig(C_plots, n_col, y_label = "Reported cases", x_label = "Date")
 ggsave("figures/real_data/fig_age_C.pdf", fig_C, width = w_age, height = h_age)
 print(fig_C)
 
