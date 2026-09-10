@@ -11,7 +11,6 @@
 # ============================================================
 
 source("src/utils.R")
-source("src/epi_ssm_multiage.R")
 
 #' Map age group `a` onto its block of state columns
 #'
@@ -19,45 +18,12 @@ source("src/epi_ssm_multiage.R")
 #' @param A total number of age groups
 #' @param state_dim total state dimension
 #' @return integer vector of column indices for age group `a`
-.state_cols <- function(a, A, state_dim) {
-  per <- ceiling(state_dim / A)
-  ((a - 1L) * per + 1L):(a * per)
-}
+# .state_cols <- function(a, A, state_dim) {
+#   per <- ceiling(state_dim / A)
+#   ((a - 1L) * per + 1L):(a * per)
+# }
+.state_cols  <- function(a) c(2L * (a - 1L) + 1L, 2L * (a - 1L) + 2L)
 
-#' Average reporting fraction per day-of-week, estimated from observed data
-#'
-#' Self-contained fallback used only when `opts$precompute_dow` is TRUE
-#' and `opts$omega_dow` wasn't supplied: for each age column, divides
-#' each day-of-week's mean reported count by the overall mean, giving a
-#' multiplicative day-of-week effect centred near 1.
-#'
-#' @param Y_hist data frame, first column Date (or numeric day index),
-#'   remaining columns reported counts per age group
-#' @param A number of age groups
-#' @param max_weeks cap on how many trailing weeks of data to use
-#' @return numeric matrix [7 x A], rows Mon..Sun
-.precompute_dow_weights <- function(Y_hist, A, max_weeks = 16L) {
-  n_use <- min(nrow(Y_hist), max_weeks * 7L)
-  tail_rows <- utils::tail(Y_hist, n_use)
-  
-  raw_day <- tail_rows[[1]]
-  dow <- if (inherits(raw_day, "Date")) {
-    as.integer(format(raw_day, "%u"))
-  } else {
-    ((as.integer(raw_day) - 1L) %% 7L) + 1L
-  }
-  
-  omega <- matrix(1, 7L, A)
-  for (a in seq_len(A)) {
-    counts    <- tail_rows[[a + 1L]]
-    day_means <- tapply(counts, dow, mean, na.rm = TRUE)
-    overall   <- mean(counts, na.rm = TRUE)
-    if (is.finite(overall) && overall > 0) {
-      omega[as.integer(names(day_means)), a] <- day_means / overall
-    }
-  }
-  omega
-}
 
 ############################################################
 ## STEP 1: MARGINAL STATE SAMPLES (with optional forecast
@@ -100,7 +66,7 @@ get_marginal_states <- function(result, opts, N_s = 100) {
   X_marginal <- array(NA_real_, dim = c(N_s * Nx, T_out, state_dim))
   theta_sub  <- theta_hist[m_idx, , , drop = FALSE]  # N_s x T x d
   
-  cols_state_list <- if (h > 0) lapply(seq_len(A), function(a) .state_cols(a, A, state_dim)) else NULL
+  cols_state_list <- if (h > 0) lapply(seq_len(A), function(a) .state_cols(a)) else NULL
   
   for (s in seq_len(N_s)) {
     m         <- m_idx[s]
@@ -165,14 +131,7 @@ simulate_observations <- function(X_marginal, theta_sub, opts) {
   Y_hist  <- opts$Data
   f_c     <- opts$InfReportDelay
   Tfit    <- opts$T
-  precompute_dow <- isTRUE(opts$precompute_dow)
-  
- 
-  
-  if (precompute_dow && is.null(opts$omega_dow)) {
-    opts$omega_dow <- .precompute_dow_weights(Y_hist, A, max_weeks = 16L)
-  }
-  
+
   C_sim <- array(NA_real_, dim = c(N_total, T_out, A))
   
   for (s in seq_len(N_s)) {
@@ -230,12 +189,6 @@ simulate_observations <- function(X_marginal, theta_sub, opts) {
         
         omega_t <- if (precompute_dow) {
           opts$omega_dow[day_of_week, a]
-        } else if (isTRUE(opts$week_effect)) {
-          omega_idx <- (A + 2L):(A + 7L)
-          omega_raw <- theta_t[omega_idx]
-          S6        <- sum(omega_raw)
-          omega     <- c(7 * omega_raw / (S6 + 1), 7 / (S6 + 1))
-          omega[day_of_week]
         } else {
           1
         }
