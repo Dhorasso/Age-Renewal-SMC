@@ -23,39 +23,6 @@
 # ============================================================
 
 source("src/utils.R")
-source("src/epi_ssm_1age.R")
-
-#' Average reporting fraction per day-of-week, estimated from observed data
-#'
-#' Self-contained fallback used only when `opts$precompute_dow` is TRUE
-#' and `opts$omega_dow` wasn't supplied: divides each day-of-week's mean
-#' reported count by the overall mean, giving a multiplicative
-#' day-of-week effect centred near 1.
-#'
-#' @param Y_hist data frame, col 1 = Date (or numeric day index),
-#'   col 2 = reported counts
-#' @param max_weeks cap on how many trailing weeks of data to use
-#' @return numeric vector length 7, Mon..Sun
-.precompute_dow_weights_1age <- function(Y_hist, max_weeks = 16L) {
-  n_use     <- min(nrow(Y_hist), max_weeks * 7L)
-  tail_rows <- utils::tail(Y_hist, n_use)
-  
-  raw_day <- tail_rows[[1]]
-  dow <- if (inherits(raw_day, "Date")) {
-    as.integer(format(raw_day, "%u"))
-  } else {
-    ((as.integer(raw_day) - 1L) %% 7L) + 1L
-  }
-  
-  omega   <- rep(1, 7L)
-  counts  <- tail_rows[[2]]
-  day_means <- tapply(counts, dow, mean, na.rm = TRUE)
-  overall   <- mean(counts, na.rm = TRUE)
-  if (is.finite(overall) && overall > 0) {
-    omega[as.integer(names(day_means))] <- day_means / overall
-  }
-  omega
-}
 
 ############################################################
 ## STEP 1: MARGINAL STATE SAMPLES (with optional forecast
@@ -213,9 +180,7 @@ simulate_observations_1age <- function(X_marginal, theta_sub, opts) {
         }
       }
       
-      omega_t <- if (precompute_dow) {
-        opts$omega_dow[day_of_week]
-      } else if (week_effect) {
+      omega_t <- if (week_effect) {
         omega_wk[day_of_week]
       } else {
         1
