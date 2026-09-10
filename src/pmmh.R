@@ -14,9 +14,6 @@
 source("src/utils.R")
 source("src/particle_filter.R")
 
-if (!requireNamespace("BayesianTools", quietly = TRUE)) {
-  install.packages("BayesianTools")
-}
 library(BayesianTools)
 library(compiler)
 
