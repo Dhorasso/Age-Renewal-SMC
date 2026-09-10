@@ -99,7 +99,7 @@ opts <- list(
   InfReportDelay = case_delay_pmf,
 
   ContMatrix       = M_4x4,
-  precompute_dow   = TRUE,
+  precompute_dow   = TRUE, # Day-of-week effect
   omega_dow        = omega_dow_mat,
   
   pBeta0 = replicate(A, function(N) rbeta(N, shape1 = 1, shape2 = 10), simplify = FALSE),
