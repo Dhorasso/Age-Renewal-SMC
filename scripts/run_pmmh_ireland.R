@@ -18,6 +18,9 @@
 # Run from the repository root:  Rscript scripts/run_pmmh_ireland.R
 # ============================================================
 
+
+# install.packages("BayesianTools")
+
 library(tidyverse)
 library(BayesianTools)
 
@@ -25,7 +28,6 @@ source("src/pmmh.R")
 source("src/epi_ssm_multiage.R")
 source("src/delay_distributions.R")
 source("src/contact_matrix_utils.R")
-source("src/posterior_marginal.R")
 
 dir.create("figures/real_data", showWarnings = FALSE, recursive = TRUE)
 
@@ -52,14 +54,23 @@ case_delay_pmf <- case_delay_pmf / sum(case_delay_pmf)
 groups <- list(G1 = 1:25, G2 = 26:45, G3 = 46:65, G4 = 66:85)
 A      <- length(groups)
 
-N_pop_full <- read_age_distribution("data/contact_matrices/Ireland_country_level_age_distribution_85.csv")
+# Population by single year of age, 0–99
+N_pop_full <- read.csv("data/contact_matrices/PEA11.20260324T160347.csv")
+N_pop_full <-N_pop_full$VALUE
+# Collapse ages 85+ into a single open-ended group → length-85 vector
+N_pop <- c(N_pop_full[1:84], sum(N_pop_full[85:length(N_pop_full)]))
+
+# 85×85 country-level contact matrix (Mistry al. 2021)
 F_fine     <- as.matrix(read.csv(
   "data/contact_matrices/Ireland_country_level_M_overall_contact_matrix_85.csv",
   header = FALSE
 ))
-cm       <- build_contact_matrix(F_fine, N_pop_full, groups)
+
+# Aggregation +  Enforce reciprocity
+cm       <- build_contact_matrix(F_fine, N_pop, groups)
 M_4x4    <- cm$M
 N_4group <- cm$N_group
+M_4x4 
 
 omega_dow_mat <- compute_dow_weights(covid, A, max_weeks = 16)
 
@@ -82,19 +93,14 @@ opts <- list(
   GenTime        = gen_pmf,
   InfReportDelay = case_delay_pmf,
 
-  chol_contact     = FALSE,
-  scale_contact    = FALSE,
-  estimate_contact = FALSE,
-  C_syth           = M_4x4,
   ContMatrix       = M_4x4,
-  week_effect      = FALSE,
-  precompute_dow   = TRUE,
+  week_effect    = TRUE,
+  precompute_dow = TRUE,
   omega_dow        = omega_dow_mat,
 
   pBeta0 = replicate(A, function(N) rbeta(N, shape1 = 1, shape2 = 10), simplify = FALSE),
   pI0    = replicate(A, function(N) sample(400:1200, N, replace = TRUE), simplify = FALSE),
 
-  # we can include prior ox fixed value for rho_a as in run_ireland_analysis.R                   
   paramNames = c("sigma[1]", "sigma[2]", "sigma[3]", "sigma[4]", "kappa"),
   paramPriors = list(
     list(dist = "lnorm", meanlog = log(0.02), sdlog = 0.5),
@@ -111,7 +117,7 @@ opts <- list(
 
   # ── PMMH-only fields ────────────────────────────────────────────────────────
   iterations = 20000,  # total PMMH iterations
-  nChains    = 3,       # DEzs requires >= 3 chains
+  nChains    = 1,
   burnin     = 4500,    # discarded before convergence checks / posterior draws
   thin       = 3,
   message    = TRUE
@@ -157,7 +163,6 @@ thetaSamples <- getSample(
   numSamples     = 100,
   coda           = FALSE
 )
-
 
 
 #============================================
