@@ -15,7 +15,6 @@
 #  1. Forecast-safe throughout: every read of Y_hist is gated on t <= opts$T;
 #     DOW for t > opts$T is inferred from the last observed date.
 #  2. Renewal force computed via matrix multiply (no nested R loops).
-#  3. Cholesky base matrix precomputed once in opts (call precompute_chol_base).
 #  4. All index arithmetic is centralised in small helpers to avoid drift.
 # ============================================================
 
@@ -25,16 +24,7 @@ source("src/utils.R")
 # ============================================================
 # COLUMN / PARAMETER INDEX HELPERS
 # ============================================================
-# theta layout: [(DOW/contact extras)]
-.dow_start   <- function(opts) 2L * opts$A + 2L        # first DOW weight, just past kappa
 
-.extra_start <- function(opts) {                       # first "extra" (contact) param
-  base <- 2L * opts$A + 1L                              # A sigmas + A rhos + kappa
-  if (isTRUE(opts$week_effect) && !isTRUE(opts$precompute_dow)) base <- base + 6L
-  base + 1L
-}
-
-.n_chol      <- function(A) as.integer(A * (A + 1L) / 2L)
 .state_cols  <- function(a) c(2L * (a - 1L) + 1L, 2L * (a - 1L) + 2L)
 .all_I_cols  <- function(A) seq(2L, 2L * A, by = 2L)
 
@@ -99,48 +89,6 @@ compute_dow_weights <- function(Y_hist, A, max_weeks = 16L) {
     for (d in 1:7) omega[d, a] <- 7 * sum(x_a[dow_win == d]) / total
   }
   omega
-}
-
-# ============================================================
-# CONTACT MATRIX HELPERS  (Cholesky NCP reparameterisation)
-# ============================================================
-
-#' Precompute the Cholesky base matrix once. Call after building opts.
-#' @param opts options list; must contain `N_pop`, `C_syth`
-#' @return `opts` with `L_syth` added
-precompute_chol_base <- function(opts) {
-  opts$L_syth <- t(chol(diag(opts$N_pop) %*% opts$C_syth))
-  opts
-}
-
-#' Build the effective contact matrix from Cholesky perturbation parameters.
-#' Uses `opts$L_syth` if precomputed; falls back to computing it on the fly.
-.chol_contact_matrix <- function(L_tilde_vec, opts) {
-  A      <- opts$A
-  L_syth <- opts$L_syth %||% t(chol(diag(opts$N_pop) %*% opts$C_syth))
-
-  L_tilde <- matrix(0, A, A)
-  L_tilde[lower.tri(L_tilde, diag = TRUE)] <- L_tilde_vec
-
-  L <- L_syth + 0.05 * L_syth * L_tilde
-  diag(1 / opts$N_pop) %*% (L %*% t(L))
-}
-
-#' Extract contact row a from theta given the chosen parameterisation.
-.contact_row <- function(a, theta, opts) {
-  off <- .extra_start(opts)
-  A   <- opts$A
-
-  if (isTRUE(opts$chol_contact)) {
-    nc <- .n_chol(A)
-    return(.chol_contact_matrix(theta[off:(off + nc - 1L)], opts)[a, ])
-  }
-  if (isTRUE(opts$scale_contact))
-    return(theta[off + a - 1L] * opts$ContMatrix[a, ])
-  if (isTRUE(opts$estimate_contact))
-    return(theta[off + (a - 1L) * A + seq(0L, A - 1L)])
-
-  opts$ContMatrix[a, ]  # fixed contact matrix
 }
 
 # ============================================================
@@ -256,12 +204,6 @@ ObsProcess <- function(X_hist, Y_hist, t, theta, opts, a, ...) {
       stop("opts$omega_dow must be set when precompute_dow = TRUE.")
     opts$omega_dow[.get_dow(Y_hist, t, opts), a]
     
-  } else if (isTRUE(opts$week_effect)) {
-    omega_raw <- theta[.dow_start(opts):(.dow_start(opts) + 5L)]
-    S6        <- sum(omega_raw)
-    omega_7   <- c(7 * omega_raw / (S6 + 1), 7 / (S6 + 1))
-    omega_7[.get_dow(Y_hist, t, opts)]
-    
   } else {
     1
   }
@@ -310,6 +252,5 @@ EpiSSM <- list(
   InitState            = InitState,
   StateProcess         = StateProcess,
   ObsProcess           = ObsProcess,
-  compute_dow_weights  = compute_dow_weights,
-  precompute_chol_base = precompute_chol_base
+  compute_dow_weights  = compute_dow_weights
 )
