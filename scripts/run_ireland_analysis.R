@@ -97,13 +97,8 @@ opts <- list(
   
   GenTime        = gen_pmf,
   InfReportDelay = case_delay_pmf,
-  
-  chol_contact     = FALSE,
-  scale_contact    = FALSE,
-  estimate_contact = FALSE,
-  C_syth           = M_4x4,
+
   ContMatrix       = M_4x4,
-  week_effect      = FALSE,
   precompute_dow   = TRUE,
   omega_dow        = omega_dow_mat,
   
