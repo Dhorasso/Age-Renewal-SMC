@@ -110,7 +110,7 @@ opts <- list(
 # ------------------------------------------------------------
 result <- SMC2(SSM = EpiSSM, opts = opts)
 saveRDS(result, file = "data/simulated/smc2_multiage_sim_result.rds")
-# result <-  readRDS("data/real/smc2_multiage_sim_result.rds") # load saved result
+# result <-  readRDS("data/simulated/smc2_multiage_sim_result.rds") # load saved result
 # ------------------------------------------------------------
 # 4. Algorithm diagnostics
 # ------------------------------------------------------------
