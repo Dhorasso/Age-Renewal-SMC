@@ -187,7 +187,7 @@ simulate_observations <- function(X_marginal, theta_sub, opts) {
           }
         }
         
-        omega_t <- if (precompute_dow) {
+        omega_t <- if (opts$precompute_dow) {
           opts$omega_dow[day_of_week, a]
         } else {
           1
