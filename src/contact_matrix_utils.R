@@ -41,7 +41,8 @@ aggregate_contact_matrix <- function(F_rec, N, groups) {
     rows <- groups[[a]]
     for (b in seq_len(A)) {
       cols      <- groups[[b]]
-      M[a, b]   <- sum(F_rec[rows, cols] * N[cols]) / sum(N[rows])
+      M[a, b]   <- sum(N[rows] * rowSums(F_rec[rows, cols, drop = FALSE])) /
+        sum(N[rows])
     }
   }
 
