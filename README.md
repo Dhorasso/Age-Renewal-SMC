@@ -33,6 +33,7 @@ Alternatively, you can download the repository as a ZIP file from the [GitHub re
 │   └── sim_data/           # Figures from the simulation study
 ├── scripts/                # Entry-point scripts that call src/ on data/
 ├── src/                    # Model and inference code
+├── LICENSE
 └── README.md
 ```
 
