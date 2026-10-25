@@ -145,7 +145,10 @@ ObsProcess <- function(X_hist, Y_hist, t, theta, opts, ...) {
   logw <- 0
   if (t >= 1L && t <= opts$T) {
     Y_t  <- Y_hist[t, 2L]
-    logw <- dnbinom(x = Y_t, size = kappa, mu = omega_t * mu, log = TRUE)
+    if (!is.na(Y_t)){
+        logw <- dnbinom(x = Y_t, size = kappa, mu = omega_t * mu, log = TRUE)
+      }
+  
   }
 
   list(logw = logw, X_obs = matrix(C_obs, nrow = N, ncol = 1L))
