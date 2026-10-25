@@ -195,7 +195,7 @@ StateProcess <- function(X_hist, t, theta, opts, cols, a) {
 ObsProcess <- function(X_hist, Y_hist, t, theta, opts, a, ...) {
   N      <- dim(X_hist)[1L]
   I_hist <- matrix(X_hist[, , 2L], nrow = N)  # [N x T_stored]
-  in_obs <- (t >= 1L && t <= opts$T)
+
   A      <- opts$A
   
   # ---- Day-of-week multiplier ----
@@ -231,7 +231,7 @@ ObsProcess <- function(X_hist, Y_hist, t, theta, opts, a, ...) {
   
   # ---- Log-weights (zero during forecast - no observations) ----
   logw <- rep(0, N)
-  if (in_obs) {
+  if (t >= 1L && t <= opts$T) {
     Y_case <- Y_hist[t, a + 1L]
     if (!is.na(Y_case))
       logw <- dnbinom(x = Y_case, size = kappa, mu = omega_t * mu_case, log = TRUE)
